@@ -150,8 +150,55 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:50}
 .defs{font-size:11.5px;color:var(--ink3);margin-top:8px;font-weight:600;line-height:1.6}
 .defs b{color:var(--ink2)}
 
+.stat.rate b{color:var(--sky)}
+
+/* ---------- level bar ---------- */
+.levelbar{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:none}
+.levelbar::-webkit-scrollbar{display:none}
+.lvchip{flex:1;min-width:112px;border:1.5px solid var(--line);background:var(--card);border-radius:15px;
+  padding:9px 12px;cursor:pointer;text-align:left;transition:transform .12s,box-shadow .12s;position:relative}
+.lvchip:hover{transform:translateY(-1px)}
+.lvchip .lvn{font-size:11px;font-weight:800;letter-spacing:.4px;color:var(--ink3)}
+.lvchip .lvname{font-size:14px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:5px}
+.lvchip .lvbar{height:5px;border-radius:3px;background:#EEEFF7;margin-top:6px;overflow:hidden}
+.lvchip .lvbar i{display:block;height:100%;background:var(--green)}
+.lvchip[data-state="current"]{border-color:transparent;box-shadow:0 6px 18px -8px rgba(35,42,77,.4);color:#fff}
+.lvchip[data-state="current"] .lvn,.lvchip[data-state="current"] .lvname{color:#fff}
+.lvchip[data-state="current"] .lvbar{background:rgba(255,255,255,.35)}
+.lvchip[data-state="current"] .lvbar i{background:#fff}
+.lvchip[data-state="locked"]{opacity:.5;cursor:not-allowed;background:#F4F4F8}
+.lvchip[data-state="locked"] .lvname{color:var(--ink3)}
+
+/* ---------- gate banner ---------- */
+.banner{margin-top:12px}
+.banner .gate{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+  border-radius:16px;padding:12px 16px;box-shadow:0 2px 0 var(--line)}
+.banner .gate .info{font-size:13px;font-weight:700;color:var(--ink2);line-height:1.4}
+.banner .gate .info b{color:var(--ink)}
+.banner .gate .meter{height:8px;border-radius:5px;background:#EEEFF7;overflow:hidden;margin-top:6px;max-width:260px}
+.banner .gate .meter i{display:block;height:100%;background:var(--green);transition:width .3s}
+.banner .challenge{margin-left:auto;flex:none;border:none;border-radius:13px;padding:12px 18px;font-weight:800;
+  font-size:14px;font-family:inherit;cursor:pointer;color:#fff;white-space:nowrap;
+  background:linear-gradient(135deg,var(--marker),#f5a623);box-shadow:0 8px 18px -8px #E9A200;color:#5b4300}
+.banner .challenge:disabled{background:#ECECF3;color:var(--ink3);box-shadow:none;cursor:default}
+
+/* ---------- quiz screen ---------- */
+.quizcard{min-height:420px}
+.quizhead{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:800;margin-bottom:4px}
+.quizhead .pill{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#fff;padding:4px 10px;border-radius:999px}
+.quizhead .count{margin-left:auto;font-size:13px;color:var(--ink3);font-weight:700}
+.quizprog{height:8px;border-radius:5px;background:#EEEFF7;overflow:hidden;margin:10px 0}
+.quizprog i{display:block;height:100%;background:linear-gradient(90deg,var(--violet),#8a6bf0);transition:width .3s;width:0}
+.quizq{font-size:14px;color:var(--ink2);font-weight:700;text-align:center;margin-bottom:4px}
+.result{text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px;justify-content:center;flex:1}
+.result .big{font-size:52px}
+.result .headline{font-size:22px;font-weight:800}
+.result .sub{font-size:15px;color:var(--ink2);font-weight:700}
+.result .lvpill{font-size:20px;font-weight:800;color:#fff;padding:8px 20px;border-radius:999px}
+
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media (max-width:520px){
   .stats{width:100%;margin:8px 0 0} header{flex-wrap:wrap}
   .title h1{font-size:20px} .tile{width:40px;height:48px;font-size:22px}
+  .lvchip{min-width:96px} .banner .gate{flex-wrap:wrap} .banner .challenge{margin-left:0;width:100%}
 }

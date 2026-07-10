@@ -1,9 +1,10 @@
 # 拼字小特工 · Spelling Agent
 
-A small spelling trainer for kids learning English (Taiwan 國中 2000-word list).
-Built for phonics (自然拼音) learners who read fine but struggle to **spell** — it drills the
-6 categories of "trap" words (silent letters, irregulars, weak vowels, double letters,
-homophones, long words) with audio, spaced repetition, and a progress/summary dashboard.
+A spelling trainer for kids learning English (Taiwan 國中 2000-word list).
+Built for phonics (自然拼音) learners who read fine but struggle to **spell**. All ~2000 words are
+graded into **5 levels**; a short **placement test** finds where the student belongs, then it plays
+as a **level-up game** — practice a level, and once your accuracy passes **80%** you can take the
+**level challenge** to climb to the next one. Audio, spaced repetition, and a progress dashboard throughout.
 
 **Vanilla JavaScript (ES modules) — no framework, no build step, no dependencies.**
 It just needs to be *served* over http (a one-line local server, or GitHub Pages), because
@@ -64,37 +65,51 @@ since it uses ES modules. Easiest paths:
 ## Project structure
 
 ```
-index.html          page structure only (loads css + src/app.js)
-css/styles.css      all styles / theme tokens
+index.html            page structure (play screen + quiz screen); loads css + src/app.js
+css/styles.css        all styles / theme tokens
+data/words2000.json   the graded word bank: [{ w: word, t: trapLetterIndices, lv: 1-5 }]
 src/
-  data.js           the word bank + categories   ← edit words here
-  store.js          progress state, localStorage, grading rules, stats (the "model")
-  srs.js            Leitner spaced-repetition word picker
-  audio.js          text-to-speech wrapper
-  confetti.js       celebration animation
-  ui.js             all DOM rendering (the "view")
-  app.js            wiring / orchestration (the "controller", entry point)
+  levels.js           level config + spelling helpers (misspelling generator, shuffle)
+  data.js             curated "featured" trap words (verified 中文 + example + mask)
+  wordbank.js         loads words2000.json, merges featured data → master word list
+  store.js            progress, localStorage, grading, level state, stats (the "model")
+  srs.js              Leitner spaced-repetition picker (scoped to a level)
+  audio.js            text-to-speech wrapper
+  confetti.js         celebration animation
+  ui.js               all DOM rendering (the "view")
+  app.js              placement → play → challenge orchestration (the "controller", entry point)
 ```
 
 Data → model → view → controller are separated: `ui.js` never touches the store directly,
-and `store.js` never touches the DOM. To add or change words, edit **`src/data.js`** only.
+and `store.js` never touches the DOM.
 
-### How a word is encoded (`src/data.js`)
-Each entry is `[casedWord, 中文, exampleSentence, category]`. In `casedWord`, **UPPERCASE**
-letters mark the "trap" letters that a phonics speller gets wrong — they drive the
-Fill-the-Trap blanks and the yellow highlight on the answer reveal. Examples:
-`"neCeSSary"` → traps at `c, s, s`; `"Know"` → trap at the silent `k`.
+### Editing the words
+- **Levels / the full bank:** `data/words2000.json`. Each entry is `{ w, t, lv }` — the word,
+  the indices of its "trap" (hard) letters, and its level 1-5. Levels were graded by a difficulty
+  heuristic (length, syllables, suffixes, spelling traps); tweak `lv` to re-grade any word.
+- **Featured words** (verified Chinese meaning + example sentence + hand-checked mask):
+  `src/data.js`. Each is `[casedWord, 中文, exampleSentence, category]`, where UPPERCASE letters
+  mark the traps — `"neCeSSary"` → `c, s, s`; `"Know"` → the silent `k`. A featured word enriches
+  the matching word in the bank.
 
 ---
 
+## How the level game works
+1. **Placement test** (first run, or the 🎯 測程度 button): an adaptive spelling ladder — hear a word,
+   pick the correct spelling — that finds the level where accuracy drops, and starts you there.
+2. **Practice a level** with any mode. Your **per-level accuracy** shows in the banner.
+3. Once you've done ≥12 questions at **≥80%**, the **🏆 挑戰測驗 (level challenge)** unlocks.
+4. Score **≥80%** on the challenge to **level up** and unlock the next level. Miss it → keep practicing.
+   Cleared levels stay open for review.
+
 ## Modes & scoring
-- **🎧 聽與拼** hear it, spell it · **🖍️ 填陷阱** fill only the hard letters ·
-  **🧩 重組** unscramble · **👀 看一眼** flash-cover-recall · homophones use sentence context.
-- Words you miss come back sooner (Leitner spaced repetition).
-- Dashboard tracks **答對率 (pass rate)**, **答對字 (distinct words correct)**, streak, and
+- **🎧 聽與拼** hear it, spell it · **✅ 選拼法** pick the correct spelling ·
+  **🧩 重組** unscramble · **🖍️ 填陷阱** fill only the hard (trap) letters.
+- Words you miss come back sooner (Leitner spaced repetition, within your level).
+- Dashboard tracks **等級 (level)**, **答對字 (distinct words correct)**, streak, and **答對率 (pass rate)**;
   熟練度: **學習中** = right once · **練習中** = 2 in a row · **精通** = 3 in a row.
-- **📊 學習總結** shows the pass rate, per-category progress, mastered words, and words
-  that were once misspelled and are now corrected.
+- **📊 學習總結** shows pass rate, per-level progress, mastered words, and words once
+  misspelled and now corrected.
 
 ## Companion docs
 - `拼字訓練計畫.md` — the teaching plan: the 6 trap categories, the Top-100 word list,

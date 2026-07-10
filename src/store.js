@@ -1,39 +1,43 @@
 // =====================================================================
-// store.js — the model. Owns progress state, localStorage persistence,
-// the grading rules, and all derived statistics. No DOM in here.
+// store.js — the model. Progress state, localStorage, grading rules,
+// per-level accounting, and derived statistics. No DOM in here.
 // =====================================================================
 import { CATS } from "./data.js";
 
-const LS_KEY = "spellAgent.v1";
+const LS_KEY = "spellAgent.v2"; // bumped: added level progression
 
-// Per-word "box" (Leitner): 0 new · 1 learning · 2 practicing · 3 mastered.
-// Per-word stat: { a: attempts, c: corrects, ew: everWrong }.
+// box (Leitner): 0 new · 1 learning · 2 practicing · 3 mastered
+// stat[id]: { a: attempts, c: corrects, ew: everWrong }
+// lstat[level]: { a, c } — per-level attempts/corrects (drives the 80% gate)
+// level: { current, unlocked, placed }
 function fresh() {
-  return { box: {}, stat: {}, points: 0, star: 0, streak: 0, best: 0, attempts: 0, correct: 0 };
+  return {
+    box: {}, stat: {}, lstat: {},
+    level: { current: 1, unlocked: 1, placed: false },
+    points: 0, streak: 0, best: 0, attempts: 0, correct: 0,
+  };
 }
 
 function load() {
   try {
     const d = JSON.parse(localStorage.getItem(LS_KEY));
-    return d ? Object.assign(fresh(), d) : fresh(); // merge over defaults (forward-compatible)
+    if (!d) return fresh();
+    const base = fresh();
+    return { ...base, ...d, level: { ...base.level, ...(d.level || {}) } };
   } catch {
     return fresh();
   }
 }
 
 let DB = load();
-
-function save() {
-  try { localStorage.setItem(LS_KEY, JSON.stringify(DB)); } catch { /* storage disabled */ }
-}
+function save() { try { localStorage.setItem(LS_KEY, JSON.stringify(DB)); } catch { /* storage off */ } }
 
 export function box(id) { return DB.box[id] || 0; }
 export function everWrong(id) { return !!(DB.stat[id] && DB.stat[id].ew); }
 export function correctCount(id) { return DB.stat[id] ? DB.stat[id].c : 0; }
 
-// Record one attempt and apply the box/points/streak rules.
-// Returns { correct, gain, streak, box, newlyMastered } for the view to celebrate.
-export function grade(id, correct) {
+// Grade one practice attempt. `level` (optional) also updates that level's tally.
+export function grade(id, correct, level) {
   const before = box(id);
   const st = DB.stat[id] || (DB.stat[id] = { a: 0, c: 0, ew: false });
   st.a++; DB.attempts++;
@@ -45,11 +49,15 @@ export function grade(id, correct) {
     DB.streak++; DB.best = Math.max(DB.best, DB.streak);
     gain = 8 + Math.min(12, DB.streak * 2);
     DB.points += gain;
-    if (DB.box[id] === 3 && before < 3) { DB.star++; newlyMastered = true; }
+    if (DB.box[id] === 3 && before < 3) newlyMastered = true;
   } else {
     st.ew = true;
-    DB.box[id] = 1;   // send back to "learning"
+    DB.box[id] = 1;
     DB.streak = 0;
+  }
+  if (level) {
+    const ls = DB.lstat[level] || (DB.lstat[level] = { a: 0, c: 0 });
+    ls.a++; if (correct) ls.c++;
   }
   save();
   return { correct, gain, streak: DB.streak, box: DB.box[id], newlyMastered };
@@ -57,7 +65,37 @@ export function grade(id, correct) {
 
 export function reset() { DB = fresh(); save(); }
 
-// Header + progress-bar numbers.
+// ---- level progression ----
+export function progress() { return { ...DB.level }; }
+
+export function levelStats(level) {
+  const s = DB.lstat[level] || { a: 0, c: 0 };
+  return { attempts: s.a, correct: s.c, rate: s.a ? s.c / s.a : 0 };
+}
+
+export function setCurrentLevel(n) {
+  DB.level.current = n;
+  if (n > DB.level.unlocked) DB.level.unlocked = n;
+  save();
+}
+
+export function completePlacement(startLevel) {
+  DB.level.placed = true;
+  DB.level.current = startLevel;
+  DB.level.unlocked = Math.max(DB.level.unlocked, startLevel);
+  save();
+}
+
+// Promote after clearing a challenge; returns the new current level.
+export function promote() {
+  const next = Math.min(5, DB.level.current + 1);
+  DB.level.unlocked = Math.max(DB.level.unlocked, next);
+  DB.level.current = next;
+  save();
+  return next;
+}
+
+// ---- header + progress-bar numbers ----
 export function stats(words) {
   let learn = 0, prac = 0, mast = 0;
   for (const w of words) {
@@ -68,28 +106,33 @@ export function stats(words) {
   const passRate = DB.attempts ? Math.round((DB.correct / DB.attempts) * 100) : 0;
   return {
     learn, prac, mast, total: words.length,
-    level: 1 + Math.floor(DB.points / 120),
-    streak: DB.streak, distinctCorrect, passRate,
-    attempts: DB.attempts, correct: DB.correct,
+    currentLevel: DB.level.current, streak: DB.streak,
+    distinctCorrect, passRate, attempts: DB.attempts, correct: DB.correct,
   };
 }
 
-// Everything the summary panel needs, as plain data (no DOM).
+// Everything the summary panel needs, as plain data.
 export function summary(words) {
   const s = stats(words);
   const mastered = words.filter((w) => box(w.id) >= 3);
   const fixed = words.filter((w) => box(w.id) >= 3 && everWrong(w.id));
-  const cats = Object.keys(CATS).map((k) => {
-    const ws = words.filter((w) => w.cat === k);
+  const levels = [1, 2, 3, 4, 5].map((lv) => {
+    const ws = words.filter((w) => w.level === lv);
+    const ls = levelStats(lv);
     return {
-      name: CATS[k].name, color: CATS[k].color, total: ws.length,
+      level: lv, total: ws.length,
       mast: ws.filter((w) => box(w.id) >= 3).length,
       correct: ws.filter((w) => correctCount(w.id) > 0).length,
+      rate: Math.round(ls.rate * 100), attempts: ls.attempts,
     };
+  });
+  const catCounts = Object.keys(CATS).map((k) => {
+    const ws = words.filter((w) => w.cat === k);
+    return { name: CATS[k].name, color: CATS[k].color, total: ws.length, mast: ws.filter((w) => box(w.id) >= 3).length };
   });
   return {
     passRate: s.passRate, distinctCorrect: s.distinctCorrect,
     attempts: s.attempts, correct: s.correct, total: s.total,
-    mastered, fixed, cats,
+    mastered, fixed, levels, catCounts,
   };
 }
