@@ -1,33 +1,36 @@
 # 拼字小特工 · Spelling Agent
 
-A tiny, offline spelling trainer for kids learning English (Taiwan 國中 2000-word list).
+A small spelling trainer for kids learning English (Taiwan 國中 2000-word list).
 Built for phonics (自然拼音) learners who read fine but struggle to **spell** — it drills the
 6 categories of "trap" words (silent letters, irregulars, weak vowels, double letters,
 homophones, long words) with audio, spaced repetition, and a progress/summary dashboard.
 
-**It is a single self-contained HTML file. No install, no build, no server, no internet required.**
+**Vanilla JavaScript (ES modules) — no framework, no build step, no dependencies.**
+It just needs to be *served* over http (a one-line local server, or GitHub Pages), because
+browsers block ES modules when a page is opened directly from `file://`.
 
 ---
 
-## How to use it
+## How to run it
 
-Pick whichever is easiest:
+### Option 1 — Local (one command, works offline)
+From this folder, start any static server and open the page:
 
-### Option 1 — Just open the file (simplest, works offline)
-Double-click **`spelling_trainer.html`**, or drag it into any modern browser
-(Chrome, Safari, Edge). That's it. Works with no internet connection.
+```bash
+python3 -m http.server 8000
+# then open http://localhost:8000/ in your browser
+```
 
-### Option 2 — Put it online with GitHub Pages (best for iPad / sharing a link)
+(Any static server works — VS Code's "Live Server" extension, `npx serve`, etc.)
+
+### Option 2 — GitHub Pages (best for iPad / sharing a link)
 
 > Not enabled yet — these are the steps to turn it on whenever you want.
 
 **Method A — web UI:**
 1. Go to the repo **Settings → Pages → Build and deployment → Source: _Deploy from a branch_**.
 2. Choose branch `main`, folder `/ (root)`, then **Save**.
-3. Wait ~1 minute. The link will be:
-   `https://<your-username>.github.io/<repo-name>/spelling_trainer.html`
-   For this repo that is:
-   `https://deanliao.github.io/vocab_tutor/spelling_trainer.html`
+3. Wait ~1 minute. The link will be `https://deanliao.github.io/vocab_tutor/`.
    Open it on any device and bookmark it.
 
 **Method B — one command (GitHub CLI):**
@@ -35,38 +38,54 @@ Double-click **`spelling_trainer.html`**, or drag it into any modern browser
 gh api -X POST repos/deanliao/vocab_tutor/pages -f 'source[branch]=main' -f 'source[path]=/'
 ```
 
-> Tip: rename `spelling_trainer.html` to `index.html` and the link becomes just
-> `https://deanliao.github.io/vocab_tutor/`.
+Because `index.html` is the entry point, the Pages link is just the clean root URL above.
 
 ---
 
 ## Can my friend run it? Is setup hard?
 
-**Yes, and it's about as easy as it gets.** There is nothing to install or configure:
+**No install, no build, no dependencies** — but it does need to be *served* (not double-clicked),
+since it uses ES modules. Easiest paths:
 
-- One HTML file, zero dependencies, no Node/Python/build step.
-- Download → double-click → play. Or open the GitHub Pages link.
-- Each person's **progress is saved privately in their own browser** (via `localStorage`),
-  so two kids on two computers keep separate scores. Nothing is uploaded anywhere.
+- **Open the GitHub Pages link** (Option 2) — nothing to install, works on any device.
+- **Or** run `python3 -m http.server` in the folder and open `http://localhost:8000/`.
 
 ### Good to know
-- **Audio (hearing the word)** uses the browser's built-in text-to-speech.
-  Chrome, Safari, and Edge on Mac / Windows / iPad / Android all have English voices,
-  so it "just works." If a device happens to have no English voice, the **偷看 (peek)**
-  and answer-reveal still show the word, so practice isn't blocked.
-- **Most reliable experience = GitHub Pages (https)**, especially on iPad — a couple of
-  browsers restrict audio/storage when opening a raw `file://`. Pages avoids that.
-- Progress lives per-browser. Clearing browser data (or the in-app **重來 reset**) resets it.
-  Using the same GitHub Pages link on the same device/browser keeps progress across days.
+- Each person's **progress is saved privately in their own browser** (`localStorage`),
+  so two kids keep separate scores. Nothing is uploaded anywhere.
+- **Audio** uses the browser's built-in text-to-speech (Chrome / Safari / Edge on
+  Mac / Windows / iPad / Android all have English voices). If a device has no English
+  voice, the **偷看 (peek)** and answer-reveal still show the word, so practice isn't blocked.
+- **GitHub Pages (https) is the most reliable**, especially on iPad.
+- The in-app **重來 reset** clears saved progress.
 
 ---
 
-## What's inside
+## Project structure
 
-- `spelling_trainer.html` — the app (open this).
-- `拼字訓練計畫.md` — the teaching plan: the 6 trap categories, the Top-100 word list,
-  the study method (Look–Say–Cover–Write–Check), a weekly schedule, and coaching tips.
-- `國中2000單字.md` — the full verified 2000-word source list.
+```
+index.html          page structure only (loads css + src/app.js)
+css/styles.css      all styles / theme tokens
+src/
+  data.js           the word bank + categories   ← edit words here
+  store.js          progress state, localStorage, grading rules, stats (the "model")
+  srs.js            Leitner spaced-repetition word picker
+  audio.js          text-to-speech wrapper
+  confetti.js       celebration animation
+  ui.js             all DOM rendering (the "view")
+  app.js            wiring / orchestration (the "controller", entry point)
+```
+
+Data → model → view → controller are separated: `ui.js` never touches the store directly,
+and `store.js` never touches the DOM. To add or change words, edit **`src/data.js`** only.
+
+### How a word is encoded (`src/data.js`)
+Each entry is `[casedWord, 中文, exampleSentence, category]`. In `casedWord`, **UPPERCASE**
+letters mark the "trap" letters that a phonics speller gets wrong — they drive the
+Fill-the-Trap blanks and the yellow highlight on the answer reveal. Examples:
+`"neCeSSary"` → traps at `c, s, s`; `"Know"` → trap at the silent `k`.
+
+---
 
 ## Modes & scoring
 - **🎧 聽與拼** hear it, spell it · **🖍️ 填陷阱** fill only the hard letters ·
@@ -76,6 +95,11 @@ gh api -X POST repos/deanliao/vocab_tutor/pages -f 'source[branch]=main' -f 'sou
   熟練度: **學習中** = right once · **練習中** = 2 in a row · **精通** = 3 in a row.
 - **📊 學習總結** shows the pass rate, per-category progress, mastered words, and words
   that were once misspelled and are now corrected.
+
+## Companion docs
+- `拼字訓練計畫.md` — the teaching plan: the 6 trap categories, the Top-100 word list,
+  the study method (Look–Say–Cover–Write–Check), a weekly schedule, and coaching tips.
+- `國中2000單字.md` — the full verified 2000-word source list.
 
 ## License
 Free to use and share for personal / educational purposes.
