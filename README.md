@@ -4,7 +4,8 @@ A spelling trainer for kids learning English (Taiwan 國中 2000-word list).
 Built for phonics (自然拼音) learners who read fine but struggle to **spell**. All ~2000 words are
 graded into **5 levels**; a short **placement test** finds where the student belongs, then it plays
 as a **level-up game** — practice a level, and once your accuracy passes **80%** you can take the
-**level challenge** to climb to the next one. Audio, spaced repetition, and a progress dashboard throughout.
+**level challenge** to climb to the next one. Every word shows its **Chinese meaning, KK phonetic, and an
+example sentence**. Audio, spaced repetition, and a progress dashboard throughout.
 
 **Vanilla JavaScript (ES modules) — no framework, no build step, no dependencies.**
 It just needs to be *served* over http (a one-line local server, or GitHub Pages), because
@@ -68,6 +69,7 @@ since it uses ES modules. Easiest paths:
 index.html            page structure (play screen + quiz screen); loads css + src/app.js
 css/styles.css        all styles / theme tokens
 data/words2000.json   the graded word bank: [{ w: word, t: trapLetterIndices, lv: 1-5 }]
+data/meanings.json    per-word { zh: 中文, ph: phonetic, sent: example sentence } for all 2000
 src/
   levels.js           level config + spelling helpers (misspelling generator, shuffle)
   data.js             curated "featured" trap words (verified 中文 + example + mask)
@@ -87,10 +89,17 @@ and `store.js` never touches the DOM.
 - **Levels / the full bank:** `data/words2000.json`. Each entry is `{ w, t, lv }` — the word,
   the indices of its "trap" (hard) letters, and its level 1-5. Levels were graded by a difficulty
   heuristic (length, syllables, suffixes, spelling traps); tweak `lv` to re-grade any word.
-- **Featured words** (verified Chinese meaning + example sentence + hand-checked mask):
-  `src/data.js`. Each is `[casedWord, 中文, exampleSentence, category]`, where UPPERCASE letters
-  mark the traps — `"neCeSSary"` → `c, s, s`; `"Know"` → the silent `k`. A featured word enriches
-  the matching word in the bank.
+- **Meanings / phonetics / sentences:** `data/meanings.json`, keyed by word →
+  `{ zh, ph, sent }`. Edit any gloss or sentence here.
+- **Featured words** (extra-verified, hand-checked mask): `src/data.js`. Each is
+  `[casedWord, 中文, exampleSentence, category]`, where UPPERCASE letters mark the traps —
+  `"neCeSSary"` → `c, s, s`; `"Know"` → the silent `k`. A featured word overrides the bank entry.
+
+### Where the meanings come from
+Chinese meanings + KK phonetics for all ~2000 words come from **[ECDICT](https://github.com/skywind3000/ECDICT)**
+(an open English↔Chinese dictionary, MIT-licensed), converted to Traditional Chinese and reduced to the
+common junior-high sense. The example sentences are model-generated (simple, kid-level) and grounded on the
+real meaning, so they're easy to review and edit in `data/meanings.json`.
 
 ---
 

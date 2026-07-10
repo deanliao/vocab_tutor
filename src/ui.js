@@ -89,11 +89,15 @@ export function renderRound(word, mode, { onAnswer, onCheck }) {
   el.catlabel.textContent = `Level ${word.level}`;
   el.catlabel.style.background = levelColor(word.level);
   el.modehint.textContent = MHINT[mode];
-  el.zh.innerHTML = word.featured
-    ? `意思：<b>${word.zh}</b><span style="color:var(--ink3)">（${CATS[word.cat].name}）</span>`
-    : `<span style="color:var(--ink3)">🔊 聽發音，拼出這個字</span>`;
+  if (word.zh) {
+    const phon = word.ph ? ` <span class="phon">[${word.ph}]</span>` : "";
+    const catTag = word.featured && word.cat ? ` <span style="color:var(--ink3)">（${CATS[word.cat].name}）</span>` : "";
+    el.zh.innerHTML = `意思：<b>${word.zh}</b>${phon}${catTag}`;
+  } else {
+    el.zh.innerHTML = `<span style="color:var(--ink3)">🔊 聽發音，拼出這個字</span>`;
+  }
 
-  if (word.featured && word.sent && mode !== "pick") {
+  if (word.sent && mode !== "pick") {
     el.sent.innerHTML = word.sent.replace(new RegExp("\\b" + word.word + "\\b", "i"), "<u>?????</u>");
   } else {
     el.sent.innerHTML = "";
