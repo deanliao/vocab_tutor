@@ -18,15 +18,25 @@ Double-click **`spelling_trainer.html`**, or drag it into any modern browser
 (Chrome, Safari, Edge). That's it. Works with no internet connection.
 
 ### Option 2 — Put it online with GitHub Pages (best for iPad / sharing a link)
-1. Create a repo on GitHub and upload `spelling_trainer.html` (and this README).
-2. Repo **Settings → Pages → Build and deployment → Source: _Deploy from a branch_**,
-   pick `main` / root, **Save**.
-3. Wait ~1 minute. Your link will be:
+
+> Not enabled yet — these are the steps to turn it on whenever you want.
+
+**Method A — web UI:**
+1. Go to the repo **Settings → Pages → Build and deployment → Source: _Deploy from a branch_**.
+2. Choose branch `main`, folder `/ (root)`, then **Save**.
+3. Wait ~1 minute. The link will be:
    `https://<your-username>.github.io/<repo-name>/spelling_trainer.html`
+   For this repo that is:
+   `https://deanliao.github.io/vocab_tutor/spelling_trainer.html`
    Open it on any device and bookmark it.
 
-> Tip: if you rename the file to `index.html`, the link is just
-> `https://<your-username>.github.io/<repo-name>/`.
+**Method B — one command (GitHub CLI):**
+```bash
+gh api -X POST repos/deanliao/vocab_tutor/pages -f 'source[branch]=main' -f 'source[path]=/'
+```
+
+> Tip: rename `spelling_trainer.html` to `index.html` and the link becomes just
+> `https://deanliao.github.io/vocab_tutor/`.
 
 ---
 
