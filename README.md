@@ -101,6 +101,9 @@ Chinese meanings + KK phonetics for all ~2000 words come from **[ECDICT](https:/
 common junior-high sense. The example sentences are model-generated (simple, kid-level) and grounded on the
 real meaning, so they're easy to review and edit in `data/meanings.json`.
 
+ECDICT is MIT-licensed (Copyright © 2025 Linwei); its attribution and full license text are in
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+
 ---
 
 ## How the level game works
@@ -126,4 +129,5 @@ real meaning, so they're easy to review and edit in `data/meanings.json`.
 - `國中2000單字.md` — the full verified 2000-word source list.
 
 ## License
-Free to use and share for personal / educational purposes.
+This project is MIT-licensed — see [LICENSE](LICENSE). It also redistributes third-party
+dictionary data (ECDICT); see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) for attributions.
