@@ -89,7 +89,8 @@ function showSessionSummary(sum) {
       ? `作答 ${sum.answered} 題 · ✅ ${sum.correct} · ❌ ${sum.incorrect} · 正確率 ${sum.rate}%`
       : "下次按「開始今天的練習」再開始吧",
     extraHtml: sum.answered
-      ? `<div class="sub">練了 ${sum.distinct} 個不同的字${sum.mastered ? ` · 新精通 ${sum.mastered} 字 ⭐` : ""}</div>`
+      ? `<div class="sub">練了 ${sum.distinct} 個不同的字${sum.mastered ? ` · 新精通 ${sum.mastered} 字 ⭐` : ""}</div>
+         <div class="sub" style="color:var(--catD)">🔥 連續練習 ${store.historyData().streak} 天</div>`
       : "",
     btnLabel: "完成 →",
   }, () => { ui.setScreen("play"); refreshChrome(); newRound(); });

@@ -11,6 +11,12 @@ function todayStr() {
   const d = new Date();
   return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
 }
+// The calendar date `offset` days before today, as { key, dnum }.
+function dayAgo(offset) {
+  const d = new Date();
+  d.setDate(d.getDate() - offset);
+  return { key: d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(), dnum: d.getDate() };
+}
 
 // box (Leitner): 0 new · 1 learning · 2 practicing · 3 mastered
 // stat[id]: { a: attempts, c: corrects, ew: everWrong }
@@ -22,6 +28,8 @@ function fresh() {
     level: { current: 1, unlocked: 1, placed: false },
     // one day's training run; counters reset each time you "start today's training"
     session: { active: false, date: null, answered: 0, correct: 0, incorrect: 0, ids: {}, mastered: 0 },
+    // per-day practice log, keyed by date -> { a: answered, c: correct, w: wrong, m: newly mastered }
+    history: {},
     points: 0, streak: 0, best: 0, attempts: 0, correct: 0,
   };
 }
@@ -35,6 +43,7 @@ function load() {
       ...base, ...d,
       level: { ...base.level, ...(d.level || {}) },
       session: { ...base.session, ...(d.session || {}) },
+      history: d.history || {},
     };
     // a session left open from a previous day is over
     if (merged.session.active && merged.session.date !== todayStr()) merged.session.active = false;
@@ -80,6 +89,9 @@ export function grade(id, correct, level) {
     if (correct) s.correct++; else s.incorrect++;
     s.ids[id] = 1;
     if (newlyMastered) s.mastered++;
+    // log into today's history (survives even if the session is never explicitly ended)
+    const h = DB.history[todayStr()] || (DB.history[todayStr()] = { a: 0, c: 0, w: 0, m: 0 });
+    h.a++; if (correct) h.c++; else h.w++; if (newlyMastered) h.m++;
   }
   save();
   return { correct, gain, streak: DB.streak, box: DB.box[id], newlyMastered };
@@ -103,6 +115,27 @@ export function sessionEnd() {
   save();
   return summary;
 }
+// Practice history for the last `n` days + streaks, for the calendar heatmap.
+export function historyData(n = 28) {
+  const days = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const { key, dnum } = dayAgo(i);
+    const h = DB.history[key];
+    const a = h ? h.a : 0, c = h ? h.c : 0;
+    days.push({ key, dnum, a, c, rate: a ? Math.round((c / a) * 100) : 0, level: a === 0 ? 0 : a < 10 ? 1 : a < 20 ? 2 : 3 });
+  }
+  const has = (off) => !!DB.history[dayAgo(off).key];
+  let streak = 0;
+  let start = has(0) ? 0 : has(1) ? 1 : null; // streak stays alive through today or yesterday
+  if (start !== null) { let k = start; while (has(k)) { streak++; k++; } }
+
+  const toIdx = (ds) => { const [y, m, d] = ds.split("-").map(Number); return Math.round(new Date(y, m - 1, d).getTime() / 86400000); };
+  const idxs = Object.keys(DB.history).map(toIdx).sort((x, y) => x - y);
+  let best = 0, cur = 0, prev = null;
+  for (const i of idxs) { cur = (prev !== null && i === prev + 1) ? cur + 1 : 1; best = Math.max(best, cur); prev = i; }
+  return { days, streak, best, total: idxs.length };
+}
+
 export function sessionState() {
   const s = DB.session;
   return {
@@ -180,6 +213,6 @@ export function summary(words) {
   return {
     passRate: s.passRate, distinctCorrect: s.distinctCorrect,
     attempts: s.attempts, correct: s.correct, total: s.total,
-    mastered, fixed, levels, catCounts,
+    mastered, fixed, levels, catCounts, history: historyData(),
   };
 }

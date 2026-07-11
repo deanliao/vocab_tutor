@@ -323,7 +323,11 @@ export function renderSummary(d) {
     <div class="subh">✅ 已精通 ${d.mastered.length} 字（連續答對 3 次）</div>
     <div class="chips-wrap">${mastered.length ? mastered.map(chip).join("") : none("還沒有，繼續加油！")}</div>
     <div class="subh">🛠️ 曾拼錯、現在已訂正 ${d.fixed.length} 字</div>
-    <div class="chips-wrap">${fixed.length ? fixed.map(fchip).join("") : none("目前沒有")}</div>`;
+    <div class="chips-wrap">${fixed.length ? fixed.map(fchip).join("") : none("目前沒有")}</div>
+    <div class="subh">📅 練習紀錄（最近 4 週）</div>
+    <div class="streakline">🔥 連續 <b>${d.history.streak}</b> 天　·　最佳 <b>${d.history.best}</b> 天　·　累計練習 <b>${d.history.total}</b> 天</div>
+    <div class="heatmap">${d.history.days.map((x) =>
+      `<i class="hc h${x.level}" title="${x.key}：${x.a ? "作答 " + x.a + " · 正確率 " + x.rate + "%" : "沒有練習"}"></i>`).join("")}</div>`;
   $("#sumClose").onclick = () => { el.summary.hidden = true; };
 }
 export function toggleSummary(data) {

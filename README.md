@@ -120,6 +120,9 @@ ECDICT is MIT-licensed (Copyright © 2025 Linwei); its attribution and full lice
   the overall progress bar at the bottom.
 - Tap **⏹ 結束今天的練習** to finish — you get a recap (questions done, accuracy, distinct words,
   newly mastered). A session is scoped to one day and auto-closes if left open overnight.
+- **練習紀錄 (history):** the 📊 summary panel shows a 4-week calendar heatmap of daily activity,
+  plus **🔥 current streak / best streak / total days practiced** (a day counts once you've
+  answered at least one question during a session).
 
 ## Modes & scoring
 - **🎧 聽與拼** hear it, spell it · **✅ 選拼法** pick the correct spelling ·
