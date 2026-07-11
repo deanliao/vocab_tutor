@@ -13,6 +13,7 @@ export const LEVELS = [
 export const levelColor = (n) => (LEVELS[n - 1] || LEVELS[0]).color;
 export const levelName = (n) => (LEVELS[n - 1] || LEVELS[0]).name;
 
+export const DAILY_GOAL = 20;         // questions that fill the daily session bar
 export const PASS_RATE = 0.8;         // ≥80% to clear a level challenge
 export const GATE_MIN_ATTEMPTS = 12;  // practice this many before the gate opens
 export const CHALLENGE_LEN = 8;       // questions in a level challenge

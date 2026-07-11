@@ -153,6 +153,26 @@ canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:50}
 
 .stat.rate b{color:var(--sky)}
 
+/* ---------- today's session ---------- */
+.session{margin-bottom:12px}
+.sess-idle{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+  border-radius:16px;padding:12px 16px;box-shadow:0 2px 0 var(--line)}
+.sess-title{font-size:14px;font-weight:800;color:var(--ink)}
+.sess-title span{font-size:11px;color:var(--ink3);font-weight:700;letter-spacing:.3px}
+.sess-start{margin-left:auto;border:none;border-radius:13px;padding:11px 18px;font-weight:800;font-size:14px;
+  font-family:inherit;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--green),#41c98a);
+  box-shadow:0 8px 18px -8px var(--green);white-space:nowrap}
+.sess-live{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 16px;box-shadow:0 2px 0 var(--line)}
+.sess-head{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.sess-end{margin-left:auto;border:1.5px solid var(--line);border-radius:11px;padding:7px 13px;font-weight:800;
+  font-size:12.5px;font-family:inherit;cursor:pointer;color:var(--coral);background:none;white-space:nowrap}
+.sess-end:hover{border-color:var(--coral)}
+.sess-bar{height:12px;border-radius:7px;background:#EEEFF7;overflow:hidden;display:flex}
+.sess-bar i{display:block;height:100%;transition:width .3s}
+.sess-bar .c{background:var(--green)} .sess-bar .w{background:var(--coral)}
+.sess-nums{margin-top:9px;font-size:13px;font-weight:700;color:var(--ink2)}
+.sess-nums b{color:var(--ink);font-variant-numeric:tabular-nums}
+
 /* ---------- level bar ---------- */
 .levelbar{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:none}
 .levelbar::-webkit-scrollbar{display:none}

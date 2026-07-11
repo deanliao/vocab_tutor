@@ -114,6 +114,13 @@ ECDICT is MIT-licensed (Copyright © 2025 Linwei); its attribution and full lice
 4. Score **≥80%** on the challenge to **level up** and unlock the next level. Miss it → keep practicing.
    Cleared levels stay open for review.
 
+## Today's training session
+- Tap **▶️ 開始今天的練習** to start a session; a session panel tracks **作答 / 答對 / 答錯 / 正確率**
+  with its own bar that fills toward a daily goal (`DAILY_GOAL`, default 20). This is separate from
+  the overall progress bar at the bottom.
+- Tap **⏹ 結束今天的練習** to finish — you get a recap (questions done, accuracy, distinct words,
+  newly mastered). A session is scoped to one day and auto-closes if left open overnight.
+
 ## Modes & scoring
 - **🎧 聽與拼** hear it, spell it · **✅ 選拼法** pick the correct spelling ·
   **🧩 重組** unscramble · **🖍️ 填陷阱** fill only the hard (trap) letters.

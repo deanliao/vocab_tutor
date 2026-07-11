@@ -9,7 +9,7 @@ import * as ui from "./ui.js";
 import { burst } from "./confetti.js";
 import {
   LEVELS, levelColor, levelName, sample,
-  PASS_RATE, GATE_MIN_ATTEMPTS, CHALLENGE_LEN, PLACEMENT_PER_LEVEL,
+  PASS_RATE, GATE_MIN_ATTEMPTS, CHALLENGE_LEN, PLACEMENT_PER_LEVEL, DAILY_GOAL,
 } from "./levels.js";
 
 let WORDS = [];
@@ -29,6 +29,7 @@ function levelInfo() {
 
 // Repaint the level bar, header stats, and the gate banner.
 function refreshChrome() {
+  ui.renderSession(store.sessionState(), DAILY_GOAL, onSessionStart, onSessionEnd);
   ui.renderProgress(store.stats(WORDS));
   ui.renderLevelBar(levelInfo(), pickLevel);
   const cur = store.progress().current;
@@ -73,6 +74,26 @@ function answer(correct) {
 }
 
 function pickLevel(n) { store.setCurrentLevel(n); refreshChrome(); newRound(); }
+
+// ---- today's training session ----
+function onSessionStart() { store.sessionStart(); refreshChrome(); }
+function onSessionEnd() { showSessionSummary(store.sessionEnd()); }
+
+function showSessionSummary(sum) {
+  ui.setScreen("quiz");
+  ui.quizResult({
+    emoji: sum.answered ? "🎉" : "👋",
+    color: "var(--violet)",
+    headline: sum.answered ? "今天辛苦了！" : "今天還沒有練習",
+    sub: sum.answered
+      ? `作答 ${sum.answered} 題 · ✅ ${sum.correct} · ❌ ${sum.incorrect} · 正確率 ${sum.rate}%`
+      : "下次按「開始今天的練習」再開始吧",
+    extraHtml: sum.answered
+      ? `<div class="sub">練了 ${sum.distinct} 個不同的字${sum.mastered ? ` · 新精通 ${sum.mastered} 字 ⭐` : ""}</div>`
+      : "",
+    btnLabel: "完成 →",
+  }, () => { ui.setScreen("play"); refreshChrome(); newRound(); });
+}
 
 // ---- placement: a spelling ladder that finds where accuracy drops ----
 async function startPlacement() {

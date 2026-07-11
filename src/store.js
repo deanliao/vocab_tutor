@@ -6,6 +6,12 @@ import { CATS } from "./data.js";
 
 const LS_KEY = "spellAgent.v2"; // bumped: added level progression
 
+// Local calendar date "YYYY-M-D" (used to scope a training session to one day).
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+}
+
 // box (Leitner): 0 new · 1 learning · 2 practicing · 3 mastered
 // stat[id]: { a: attempts, c: corrects, ew: everWrong }
 // lstat[level]: { a, c } — per-level attempts/corrects (drives the 80% gate)
@@ -14,6 +20,8 @@ function fresh() {
   return {
     box: {}, stat: {}, lstat: {},
     level: { current: 1, unlocked: 1, placed: false },
+    // one day's training run; counters reset each time you "start today's training"
+    session: { active: false, date: null, answered: 0, correct: 0, incorrect: 0, ids: {}, mastered: 0 },
     points: 0, streak: 0, best: 0, attempts: 0, correct: 0,
   };
 }
@@ -23,7 +31,14 @@ function load() {
     const d = JSON.parse(localStorage.getItem(LS_KEY));
     if (!d) return fresh();
     const base = fresh();
-    return { ...base, ...d, level: { ...base.level, ...(d.level || {}) } };
+    const merged = {
+      ...base, ...d,
+      level: { ...base.level, ...(d.level || {}) },
+      session: { ...base.session, ...(d.session || {}) },
+    };
+    // a session left open from a previous day is over
+    if (merged.session.active && merged.session.date !== todayStr()) merged.session.active = false;
+    return merged;
   } catch {
     return fresh();
   }
@@ -59,11 +74,43 @@ export function grade(id, correct, level) {
     const ls = DB.lstat[level] || (DB.lstat[level] = { a: 0, c: 0 });
     ls.a++; if (correct) ls.c++;
   }
+  if (DB.session.active) {
+    const s = DB.session;
+    s.answered++;
+    if (correct) s.correct++; else s.incorrect++;
+    s.ids[id] = 1;
+    if (newlyMastered) s.mastered++;
+  }
   save();
   return { correct, gain, streak: DB.streak, box: DB.box[id], newlyMastered };
 }
 
 export function reset() { DB = fresh(); save(); }
+
+// ---- today's training session ----
+export function sessionStart() {
+  DB.session = { active: true, date: todayStr(), answered: 0, correct: 0, incorrect: 0, ids: {}, mastered: 0 };
+  save();
+}
+export function sessionEnd() {
+  const s = DB.session;
+  const summary = {
+    answered: s.answered, correct: s.correct, incorrect: s.incorrect,
+    distinct: Object.keys(s.ids).length, mastered: s.mastered,
+    rate: s.answered ? Math.round((s.correct / s.answered) * 100) : 0,
+  };
+  DB.session.active = false;
+  save();
+  return summary;
+}
+export function sessionState() {
+  const s = DB.session;
+  return {
+    active: s.active, answered: s.answered, correct: s.correct, incorrect: s.incorrect,
+    distinct: Object.keys(s.ids).length,
+    rate: s.answered ? Math.round((s.correct / s.answered) * 100) : 0,
+  };
+}
 
 // ---- level progression ----
 export function progress() { return { ...DB.level }; }
